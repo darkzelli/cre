@@ -3,6 +3,10 @@ import argparse
 import subprocess
 import os
 import shutil
+import re
+
+SCRIPT_PATH = __file__
+
 
 def clone_repository(repo_url, directory):
     try:
@@ -25,12 +29,33 @@ def clone_repository(repo_url, directory):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+
+def update_default_repo(new_url):
+    try:
+        with open(SCRIPT_PATH, "r") as file:
+            script_content = file.read()
+
+        # Update the default URL in the script
+        updated_content = re.sub(
+            r'default="https://github\.com/.*?"',
+            f'default="{new_url}"',
+            script_content
+        )
+
+        with open(SCRIPT_PATH, "w") as file:
+            file.write(updated_content)
+
+        print(f"Default repository URL updated to: {new_url}")
+    except Exception as e:
+        print(f"Failed to update the default repository URL: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Clone a Git repository.")
     parser.add_argument(
         "--r",
         type=str,
-        default="https://github.com/darkzelli/viteBase",
+        default="https://github.com/coollabsio/fonts",
         help="The URL of the Git repository to clone (default: https://github.com/darkzelli/viteBase)."
     )
     parser.add_argument(
@@ -41,11 +66,20 @@ def main():
         default=".",  # Default to '.' if --d is not provided
         help="The directory to clone the repository into. Use '.' for the current directory, or specify a subfolder path (e.g., 'folder/subfolder')."
     )
+    parser.add_argument(
+        "--set-default",
+        type=str,
+        help="Set a new default repository URL for future use."
+    )
 
     args = parser.parse_args()
 
-    # Clone the repository
-    clone_repository(args.r, args.d)
+    if args.set_default:
+        update_default_repo(args.set_default)
+    else:
+        # Clone the repository
+        clone_repository(args.r, args.d)
+
 
 if __name__ == "__main__":
     main()
